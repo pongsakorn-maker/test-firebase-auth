@@ -8,9 +8,19 @@ class LoginForm extends React.Component {
     this.state = {
       email: '',
       password: '',
-      currentUser: null,
-      message: ''
+      message: '',
+      currentUser: null
     }
+  }
+
+  componentDidMount() {
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        this.setState({
+          currentUser: user
+        })
+      }
+    })
   }
 
   onChange = e => {
@@ -25,10 +35,41 @@ class LoginForm extends React.Component {
     e.preventDefault()
 
     const { email, password } = this.state
-    // TODO: implement signInWithEmailAndPassword()
+    auth
+      .signInWithEmailAndPassword(email, password)
+      .then(response => {
+        this.setState({
+          currentUser: response.user
+        })
+      })
+      .catch(error => {
+        this.setState({
+          message: error.message
+        })
+      })
+  }
+
+  logout = e => {
+    e.preventDefault()
+    auth.signOut().then(response => {
+      this.setState({
+        currentUser: null
+      })
+    })
   }
 
   render() {
+    const { message, currentUser } = this.state
+
+    if (currentUser) {
+      return (
+        <div>
+          <p>Hello {currentUser.email}</p>
+          <button onClick={this.logout}>Logout</button>
+        </div>
+      )
+    }
+
     return (
       <section className="section container">
         <div className="columns is-centered">
@@ -57,6 +98,8 @@ class LoginForm extends React.Component {
                   />
                 </div>
               </div>
+
+              {message ? <p className="help is-danger">{message}</p> : null}
 
               <div className="field is-grouped">
                 <div className="control">
